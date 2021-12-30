@@ -1,0 +1,20 @@
+{
+  "name": "rpg-game",
+  "version": "1.0.0",
+  "description": "my first rpg game created with phaser 3",
+  "main": "index.js",
+  "scripts": {
+    "start": "http-server -p 8080",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "rpg",
+    "phaser3",
+    "javascript"
+  ],
+  "author": "dobleuber",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.0.0"
+  }
+}
