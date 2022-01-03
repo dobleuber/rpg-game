@@ -18,26 +18,24 @@ class GameScene extends Phaser.Scene {
     }
 
     create() {
-        this.wall = this.physics.add.image(100, 400, 'button1')
-        this.add.image(300, 100, 'button1')
-        this.player = new Player(this, 32, 32, 'characters', 14)
-        this.createChests()
+        this.createMap()
+        
+        this.createChestGroup()
 
         this.goldSound = this.sound.add('goldSound', {
             loop: false,
             volume: 0.5
         })
 
-        this.wall.setImmovable()
-
         this.cursor = this.input.keyboard.createCursorKeys()
 
-        this.setupColliders()
-
+        this.createGameManager()
     }
 
     update() {
-        this.player.update(this.cursor)
+        if(this.player) {
+            this.player.update(this.cursor)
+        }
     }
 
     collectChest(player, chest) {
@@ -49,34 +47,53 @@ class GameScene extends Phaser.Scene {
         this.events.emit('updateScore', this.score);
         // make chest game object inactive
         chest.makeInactive();
-        // spawn a new chest
-        this.time.delayedCall(1000, this.spawnChest, [], this);
+
+        this.events.emit('pickupChest', chest.id)
     }
 
-    createChests() {
+    createChestGroup() {
         this.chests = this.physics.add.group()
-        for (let i = 0; i < this.maxNumberOfChests; i++) {
-            this.spawnChest()
-        }
     }
 
-    spawnChest() {
-        const [x, y] = this.chestPositions[Math.floor(Math.random() * this.chestPositions.length)];
-
+    spawnChest(chestObject) {
+        
         let chest = this.chests.getFirstDead();
+        const {x, y, gold, id} = chestObject
 
         if (!chest) {
-            const chest = new Chest(this, x, y, 'items', 0);
+            const chest = new Chest(this, x * 2, y * 2, 'items', 0, gold, id);
             // add chest to chests group
             this.chests.add(chest);
         } else {
-            chest.setPosition(x, y);
+            chest.id = id
+            chest.coins = gold
+            chest.setPosition(x * 2, y * 2);
             chest.makeActive();
         }
     }
 
     setupColliders() {
-        this.physics.add.collider(this.player, this.wall)
         this.physics.add.overlap(this.player, this.chests, this.collectChest, null, this)
+        this.physics.add.collider(this.player, this.map.blockedLayer)
+    }
+
+    createMap() {
+        // create the map
+        this.map = new Map(this, 'map', 'background', 'background', 'blocked')
+    }
+
+    createGameManager() {
+        this.events.on('spawnPlayer', ({x, y}) => {
+            this.player = new Player(this, x * 2, y * 2, 'characters', 14)
+            this.setupColliders()
+        })
+
+        this.events.on('chestSpawned', chest => {
+            this.spawnChest(chest)
+        })
+
+
+        this.gameManager = new GameManager(this, this.map.map.objects)
+        this.gameManager.setup()
     }
 }

@@ -2,7 +2,7 @@ class Player extends Phaser.Physics.Arcade.Image {
     constructor(scene, x, y, key, frame) {
         super(scene, x, y, key, frame)
         this.scene = scene
-        this.velocity = 100
+        this.velocity = 160
 
         this.scene.physics.world.enable(this)
         this.setImmovable(false)
@@ -12,6 +12,9 @@ class Player extends Phaser.Physics.Arcade.Image {
 
         // add the player to the scene
         this.scene.add.existing(this)
+
+        // camera follows the player
+        this.scene.cameras.main.startFollow(this)
     }
 
     update(cursor) {
