@@ -20,7 +20,7 @@ class GameScene extends Phaser.Scene {
     create() {
         this.createMap()
         
-        this.createChestGroup()
+        this.createGroups()
 
         this.goldSound = this.sound.add('goldSound', {
             loop: false,
@@ -51,8 +51,14 @@ class GameScene extends Phaser.Scene {
         this.events.emit('pickupChest', chest.id)
     }
 
-    createChestGroup() {
+    enemyOverlap(player, monster) {
+        monster.makeInactive()
+        this.events.emit('monsterKilled', monster.id)
+    }
+
+    createGroups() {
         this.chests = this.physics.add.group()
+        this.monsters = this.physics.add.group()
     }
 
     spawnChest(chestObject) {
@@ -72,9 +78,36 @@ class GameScene extends Phaser.Scene {
         }
     }
 
+    spawnMonster(monsterObject) {
+        let monster = this.monsters.getFirstDead();
+        const {x, y, id, frame, health} = monsterObject
+
+        if (!monster) {
+            const monster = new Monster(this,
+                x * 2,
+                y * 2,
+                'monsters',
+                frame,
+                id,
+                health
+            );
+            // add chest to chests group
+            this.monsters.add(monster);
+        } else {
+            monster.id = id
+            monster.health = health
+            monster.maxHealth = health
+            monster.setPosition(x * 2, y * 2)
+            monster.setTexture('monsters', frame)
+            monster.makeActive()
+        }
+    }
+
     setupColliders() {
         this.physics.add.overlap(this.player, this.chests, this.collectChest, null, this)
         this.physics.add.collider(this.player, this.map.blockedLayer)
+        this.physics.add.collider(this.monsters, this.map.blockedLayer)
+        this.physics.add.overlap(this.player, this.monsters, this.enemyOverlap, null, this)
     }
 
     createMap() {
@@ -92,6 +125,9 @@ class GameScene extends Phaser.Scene {
             this.spawnChest(chest)
         })
 
+        this.events.on('monsterSpawned', monster => {
+            this.spawnMonster(monster)
+        })
 
         this.gameManager = new GameManager(this, this.map.map.objects)
         this.gameManager.setup()
