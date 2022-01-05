@@ -117,7 +117,7 @@ class GameScene extends Phaser.Scene {
 
     createGameManager() {
         this.events.on('spawnPlayer', ({x, y}) => {
-            this.player = new Player(this, x * 2, y * 2, 'characters', 14)
+            this.player = new PlayerContainer(this, x * 2, y * 2, 'characters', 14)
             this.setupColliders()
         })
 
