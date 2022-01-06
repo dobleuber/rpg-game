@@ -51,10 +51,16 @@ class GameManager {
             }
         })
 
-        this.scene.events.on('monsterKilled', monsterId => {
+        this.scene.events.on('monsterAttacked', monsterId => {
             // update spawner
             if (this.monsters[monsterId]) {
-                this.spawners[this.monsters[monsterId].spawnerId].removeObject(monsterId)
+                // subtract health from monster
+                this.monsters[monsterId].loseHealth()
+
+                if (this.monsters[monsterId].health <= 0) {
+                    this.spawners[this.monsters[monsterId].spawnerId].removeObject(monsterId)
+                    this.scene.events.emit('monsterRemoved', monsterId)
+                }
             }
         })
 

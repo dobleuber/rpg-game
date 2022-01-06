@@ -13,7 +13,7 @@ class PlayerContainer extends Phaser.GameObjects.Container {
         this.currentDirection = Direction.RIGHT
         this.playerAttacking = false
         this.flipX = true
-
+        this.swordHit = false
         // set a size to the container
         this.setSize(64, 64)
 
@@ -70,7 +70,7 @@ class PlayerContainer extends Phaser.GameObjects.Container {
             this.scene.time.delayedCall(150, () => {
                 this.playerAttacking = false
                 this.weapon.setAlpha(0)
-                this.weaponHit = false
+                this.swordHit = false
             }, [], this)
         }
 
