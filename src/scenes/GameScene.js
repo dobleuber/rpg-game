@@ -5,21 +5,11 @@ class GameScene extends Phaser.Scene {
 
     init() {
         this.scene.launch('UI')
-        this.maxNumberOfChests = 3
-        this.chestPositions = [
-            [100, 100],
-            [300, 100],
-            [500, 100],
-            [100, 300],
-            [300, 300],
-            [500, 300]
-        ]
-        this.score = 0
     }
 
     create() {
         this.createMap()
-        
+
         this.createGroups()
 
         this.goldSound = this.sound.add('goldSound', {
@@ -33,7 +23,7 @@ class GameScene extends Phaser.Scene {
     }
 
     update() {
-        if(this.player) {
+        if (this.player) {
             this.player.update(this.cursor)
         }
     }
@@ -41,14 +31,8 @@ class GameScene extends Phaser.Scene {
     collectChest(player, chest) {
         // play gold pickup sound
         this.goldSound.play()
-        // update our score
-        this.score += chest.coins;
-        // update score in the ui
-        this.events.emit('updateScore', this.score);
-        // make chest game object inactive
-        chest.makeInactive();
 
-        this.events.emit('pickupChest', chest.id)
+        this.events.emit('pickupChest', chest.id, player.id)
     }
 
     enemyOverlap(player, monster) {
@@ -64,9 +48,14 @@ class GameScene extends Phaser.Scene {
     }
 
     spawnChest(chestObject) {
-        
+
         let chest = this.chests.getFirstDead();
-        const {x, y, gold, id} = chestObject
+        const {
+            x,
+            y,
+            gold,
+            id
+        } = chestObject
 
         if (!chest) {
             const chest = new Chest(this, x * 2, y * 2, 'items', 0, gold, id);
@@ -82,7 +71,13 @@ class GameScene extends Phaser.Scene {
 
     spawnMonster(monsterObject) {
         let monster = this.monsters.getFirstDead();
-        const {x, y, id, frame, health} = monsterObject
+        const {
+            x,
+            y,
+            id,
+            frame,
+            health
+        } = monsterObject
 
         if (!monster) {
             const monster = new Monster(this,
@@ -119,8 +114,13 @@ class GameScene extends Phaser.Scene {
     }
 
     createGameManager() {
-        this.events.on('spawnPlayer', ({x, y}) => {
-            this.player = new PlayerContainer(this, x * 2, y * 2, 'characters', 14)
+        this.events.on('spawnPlayer', ({
+            x,
+            y,
+            health,
+            id
+        }) => {
+            this.player = new PlayerContainer(this, x * 2, y * 2, 'characters', 14, health, id)
             this.setupColliders()
         })
 
@@ -136,6 +136,22 @@ class GameScene extends Phaser.Scene {
             this.monsters.getChildren().forEach(monster => {
                 if (monster.id === monsterId) {
                     monster.makeInactive()
+                }
+            })
+        })
+
+        this.events.on('chestRemoved', chestId => {
+            this.chests.getChildren().forEach(chest => {
+                if (chest.id === chestId) {
+                    chest.makeInactive()
+                }
+            })
+        })
+
+        this.events.on('monsterHealthChanged', (monsterId, monsterHealth) => {
+            this.monsters.getChildren().forEach(monster => {
+                if (monster.id === monsterId) {
+                    monster.updateHealth(monsterHealth)
                 }
             })
         })

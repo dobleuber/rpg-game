@@ -6,6 +6,7 @@ class GameManager {
         this.spawners = {}
         this.chests = {}
         this.monsters = {}
+        this.players = {}
         this.playerLocations = []
         this.chestLocation = {}
         this.monsterLocation = {}
@@ -44,22 +45,31 @@ class GameManager {
     }
 
     setupEventListeners() {
-        this.scene.events.on('pickupChest', chestId => {
+        this.scene.events.on('pickupChest', (chestId, playerId) => {
             // update spawner
             if (this.chests[chestId]) {
-                this.spawners[this.chests[chestId].spawnerId].removeObject(chestId)
+                const chest = this.chests[chestId]
+                const player = this.players[playerId]
+                const {gold} = chest
+                player.updateGold(gold)
+                this.spawners[chest.spawnerId].removeObject(chestId)
+                this.scene.events.emit('updateScore', player.gold)
+                this.scene.events.emit('chestRemoved', chestId)
             }
         })
 
         this.scene.events.on('monsterAttacked', monsterId => {
+            const monster = this.monsters[monsterId]
             // update spawner
-            if (this.monsters[monsterId]) {
+            if (monster) {
                 // subtract health from monster
-                this.monsters[monsterId].loseHealth()
+                monster.loseHealth()
 
-                if (this.monsters[monsterId].health <= 0) {
-                    this.spawners[this.monsters[monsterId].spawnerId].removeObject(monsterId)
+                if (monster.health <= 0) {
+                    this.spawners[monster.spawnerId].removeObject(monsterId)
                     this.scene.events.emit('monsterRemoved', monsterId)
+                } else {
+                    this.scene.events.emit('monsterHealthChanged', monsterId, monster.health)
                 }
             }
         })
@@ -110,9 +120,10 @@ class GameManager {
     }
 
     spawnPlayer() {
-        const location = this.playerLocations[Math.floor(Math.random() * this.playerLocations.length)]
+        const player = new PlayerModel(this.playerLocations)
+        this.players[player.id] = player
 
-        this.scene.events.emit('spawnPlayer', location)
+        this.scene.events.emit('spawnPlayer', player)
     }
 
     addChest(chest) {
