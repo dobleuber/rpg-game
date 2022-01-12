@@ -35,10 +35,10 @@ class GameScene extends Phaser.Scene {
         this.events.emit('pickupChest', chest.id, player.id)
     }
 
-    enemyOverlap(player, monster) {
+    enemyOverlap(weapon, monster) {
         if (this.player.playerAttacking && !this.player.swordHit) {
             this.player.swordHit = true
-            this.events.emit('monsterAttacked', monster.id)
+            this.events.emit('monsterAttacked', monster.id, this.player.id)
         }
     }
 
@@ -154,6 +154,14 @@ class GameScene extends Phaser.Scene {
                     monster.updateHealth(monsterHealth)
                 }
             })
+        })
+
+        this.events.on('playerHealthChanged', (playerId, playerHealth) => {
+            this.player.updateHealth(playerHealth)
+        })
+
+        this.events.on('respawnPlayer', playerObject => {
+            this.player.respawn(playerObject)
         })
 
         this.gameManager = new GameManager(this, this.map.map.objects)

@@ -43,6 +43,9 @@ class PlayerContainer extends Phaser.GameObjects.Container {
         this.weapon.setScale(1.5)
         this.scene.physics.world.enable(this.weapon)
         this.weapon.alpha = 0
+
+        // create the health bar
+        this.createHealthBar()
     }
 
     update(cursor) {
@@ -100,5 +103,32 @@ class PlayerContainer extends Phaser.GameObjects.Container {
             this.player.flipX = false
             this.weapon.flipX = true
         }
+
+        this.updateHealthBar()
+    }
+
+    createHealthBar() {
+        // create the health bar
+        this.healthBar = this.scene.add.graphics()
+        this.updateHealthBar()
+    }
+
+    updateHealthBar() {
+        this.healthBar.clear()
+        this.healthBar.fillStyle(0xffffff, 1)
+        this.healthBar.fillRect(this.x - 32, this.y - 40, this.width, 5)
+        this.healthBar.fillGradientStyle(0xff0000, 0xffffff, 4)
+        this.healthBar.fillRect(this.x - 32, this.y - 40, this.width * this.health / this.maxHealth, 5)
+    }
+
+    updateHealth(health) {
+        this.health = health
+        this.updateHealthBar()
+    }
+
+    respawn(playerObject) {
+        this.health = playerObject.health
+        this.setPosition(playerObject.x * 2, playerObject.y * 2)
+        this.updateHealthBar()
     }
 }

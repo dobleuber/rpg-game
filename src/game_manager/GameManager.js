@@ -58,18 +58,42 @@ class GameManager {
             }
         })
 
-        this.scene.events.on('monsterAttacked', monsterId => {
+        this.scene.events.on('monsterAttacked', (monsterId, playerId) => {
             const monster = this.monsters[monsterId]
+            const player = this.players[playerId]
             // update spawner
             if (monster) {
                 // subtract health from monster
                 monster.loseHealth()
 
+                const {gold, attack} = monster
+
                 if (monster.health <= 0) {
+                     // check monster gold and update player gold
+                    player.updateGold(gold)
+                    this.scene.events.emit('updateScore', player.gold)
                     this.spawners[monster.spawnerId].removeObject(monsterId)
                     this.scene.events.emit('monsterRemoved', monsterId)
+
+                    player.updateHealth(2)
+                    this.scene.events.emit('playerHealthChanged', playerId, player.health)
                 } else {
+                    // update player health
+                    player.updateHealth(-attack)
+                    this.scene.events.emit('playerHealthChanged', playerId, player.health)
+
+                    // update monster health
                     this.scene.events.emit('monsterHealthChanged', monsterId, monster.health)
+
+                    // check player's health, if <= 0, update player's gold and respawn player
+                    if (player.health <= 0) {
+                        player.updateGold(-parseInt(player.gold / 2, 10))
+                        this.scene.events.emit('updateScore', player.gold)
+
+                        // respawn player
+                        player.respawn()
+                        this.scene.events.emit('respawnPlayer', player)
+                    }
                 }
             }
         })
