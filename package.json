@@ -16,5 +16,8 @@
   "license": "MIT",
   "devDependencies": {
     "http-server": "^14.0.0"
+  },
+  "dependencies": {
+    "vercel": "^23.1.2"
   }
 }
