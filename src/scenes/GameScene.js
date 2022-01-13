@@ -12,14 +12,38 @@ class GameScene extends Phaser.Scene {
 
         this.createGroups()
 
-        this.goldSound = this.sound.add('goldSound', {
-            loop: false,
-            volume: 0.5
-        })
+        this.createAudio()
 
         this.cursor = this.input.keyboard.createCursorKeys()
 
         this.createGameManager()
+    }
+
+    createAudio() {
+        this.goldSound = this.sound.add('goldSound', {
+            loop: false,
+            volume: 0.3
+        })
+
+        this.enemyDeathSound = this.sound.add('enemyDeath', {
+            loop: false,
+            volume: 0.2
+        })
+
+        this.playerAttackSound = this.sound.add('playerAttack', {
+            loop: false,
+            volume: 0.05
+        })
+
+        this.playerDamageSound = this.sound.add('playerDamage', {
+            loop: false,
+            volume: 0.2
+        })
+
+        this.playerDeathSound = this.sound.add('playerDeath', {
+            loop: false,
+            volume: 0.2
+        })
     }
 
     update() {
@@ -45,6 +69,7 @@ class GameScene extends Phaser.Scene {
     createGroups() {
         this.chests = this.physics.add.group()
         this.monsters = this.physics.add.group()
+        this.monsters.runChildUpdate = true
     }
 
     spawnChest(chestObject) {
@@ -81,8 +106,8 @@ class GameScene extends Phaser.Scene {
 
         if (!monster) {
             const monster = new Monster(this,
-                x * 2,
-                y * 2,
+                x,
+                y,
                 'monsters',
                 frame,
                 id,
@@ -94,7 +119,7 @@ class GameScene extends Phaser.Scene {
             monster.id = id
             monster.health = health
             monster.maxHealth = health
-            monster.setPosition(x * 2, y * 2)
+            monster.setPosition(x, y)
             monster.setTexture('monsters', frame)
             monster.makeActive()
         }
@@ -120,7 +145,7 @@ class GameScene extends Phaser.Scene {
             health,
             id
         }) => {
-            this.player = new PlayerContainer(this, x * 2, y * 2, 'characters', 14, health, id)
+            this.player = new PlayerContainer(this, x * 2, y * 2, 'characters', 14, health, id, this.playerAttackSound)
             this.setupColliders()
         })
 
@@ -136,6 +161,7 @@ class GameScene extends Phaser.Scene {
             this.monsters.getChildren().forEach(monster => {
                 if (monster.id === monsterId) {
                     monster.makeInactive()
+                    this.enemyDeathSound.play()
                 }
             })
         })
@@ -156,11 +182,25 @@ class GameScene extends Phaser.Scene {
             })
         })
 
+        this.events.on('montersMovement', monsters => {
+            this.monsters.getChildren().forEach(monster => {
+                Object.keys(monsters).forEach(monsterId => {
+                    if (monster.id === monsterId) {
+                        this.physics.moveToObject(monster, monsters[monsterId], 40)
+                    }
+                })
+            })
+        })
+
         this.events.on('playerHealthChanged', (playerId, playerHealth) => {
+            if (playerHealth < this.player.health) {
+                this.playerDamageSound.play()
+            }
             this.player.updateHealth(playerHealth)
         })
 
         this.events.on('respawnPlayer', playerObject => {
+            this.playerDeathSound.play()
             this.player.respawn(playerObject)
         })
 

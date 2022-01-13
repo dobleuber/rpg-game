@@ -1,5 +1,5 @@
 class Spawner {
-    constructor(config, spawnLocations, addObject, deleteObject) {
+    constructor(config, spawnLocations, addObject, deleteObject, moveObjects) {
         const {
             id,
             spawnInterval,
@@ -14,6 +14,7 @@ class Spawner {
         this.spawnLocations = spawnLocations
         this.addObject = addObject
         this.deleteObject = deleteObject
+        this.moveObjects = moveObjects
 
         this.objectsCreated = []
 
@@ -26,6 +27,10 @@ class Spawner {
                 this.spawnObject()
             }
         }, this.spawnInterval)
+
+        if (this.objectType === SpawnerType.Monster) {
+            this.moveMonsters()
+        }
     }
 
     spawnObject() {
@@ -78,5 +83,15 @@ class Spawner {
         const index = this.objectsCreated.findIndex(object => object.id === id)
         this.objectsCreated.splice(index, 1)
         this.deleteObject(id)
+    }
+
+    moveMonsters() {
+        this.moveMonsterInterval = setInterval(() => {
+            this.objectsCreated.forEach(monster => {
+                monster.move()
+            })
+
+            this.moveObjects()
+        }, 1000)
     }
 }
